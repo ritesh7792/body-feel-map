@@ -87,10 +87,10 @@ export function analyzeEmotions(markings: BodyMarkings): EmotionResult[] {
     }];
   }
 
-  // Analyze each emotion pattern
+  // Analyze each emotion pattern with improved sensitivity
   for (const [emotion, pattern] of Object.entries(EMOTION_PATTERNS)) {
     let matches = 0;
-    let totalExpected = 0;
+    let totalChecked = 0;
     const foundPatterns: string[] = [];
 
     // Check each sensation type in the pattern
@@ -98,9 +98,9 @@ export function analyzeEmotions(markings: BodyMarkings): EmotionResult[] {
       if (sensation === 'indicators' || sensation === 'description') continue;
       
       const regions = expectedRegions as string[];
-      totalExpected += regions.length;
 
       for (const region of regions) {
+        totalChecked++;
         if (allMarkings[region as keyof typeof allMarkings] === sensation) {
           matches++;
           foundPatterns.push(`${sensation} ${region.replace('-', ' ')}`);
@@ -108,11 +108,12 @@ export function analyzeEmotions(markings: BodyMarkings): EmotionResult[] {
       }
     }
 
-    if (matches > 0) {
-      const confidence = Math.min(matches / totalExpected, 1);
+    if (matches > 0 && totalChecked > 0) {
+      // More generous confidence calculation
+      const confidence = Math.min((matches / Math.max(totalChecked * 0.3, 1)), 1);
       
-      // Only include emotions with reasonable confidence
-      if (confidence > 0.15) {
+      // Lower threshold for inclusion
+      if (confidence > 0.1) {
         results.push({
           emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
           confidence,
@@ -123,8 +124,99 @@ export function analyzeEmotions(markings: BodyMarkings): EmotionResult[] {
     }
   }
 
+  // If no strong matches, provide contextual suggestions based on individual sensations
+  if (results.length === 0 || results.every(r => r.confidence < 0.2)) {
+    const contextualResults = getContextualSuggestions(allMarkings);
+    results.push(...contextualResults);
+  }
+
   // Sort by confidence and return top results
   return results
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 3);
+}
+
+// New function to provide contextual suggestions when no clear patterns match
+function getContextualSuggestions(markings: Record<string, any>): EmotionResult[] {
+  const suggestions: EmotionResult[] = [];
+  
+  // Count sensations by type
+  const sensationCounts = {
+    hot: 0, warm: 0, cool: 0, cold: 0, numb: 0
+  };
+  
+  const sensationRegions: Record<string, string[]> = {
+    hot: [], warm: [], cool: [], cold: [], numb: []
+  };
+
+  for (const [region, sensation] of Object.entries(markings)) {
+    if (sensation && sensationCounts.hasOwnProperty(sensation)) {
+      sensationCounts[sensation as keyof typeof sensationCounts]++;
+      sensationRegions[sensation].push(region.replace('-', ' '));
+    }
+  }
+
+  // Cold legs/limbs often indicates fear or anxiety
+  if (sensationCounts.cold > 0) {
+    const coldLimbs = sensationRegions.cold.filter(region => 
+      region.includes('leg') || region.includes('foot') || region.includes('arm') || region.includes('hand')
+    );
+    
+    if (coldLimbs.length > 0) {
+      suggestions.push({
+        emotion: "Fear/Anxiety",
+        confidence: 0.6,
+        description: "Cold sensations in the limbs often indicate fear or anxiety, as the body redirects blood flow to vital organs.",
+        patterns: [`Cold in: ${coldLimbs.join(', ')}`]
+      });
+    }
+  }
+
+  // Hot head/face often indicates anger or stress
+  if (sensationCounts.hot > 0) {
+    const hotHead = sensationRegions.hot.filter(region => 
+      region.includes('head') || region.includes('face')
+    );
+    
+    if (hotHead.length > 0) {
+      suggestions.push({
+        emotion: "Anger/Stress",
+        confidence: 0.5,
+        description: "Heat in the head or face area typically indicates anger, frustration, or intense stress.",
+        patterns: [`Hot in: ${hotHead.join(', ')}`]
+      });
+    }
+  }
+
+  // Numb areas suggest emotional shutdown or overwhelm
+  if (sensationCounts.numb > 0) {
+    suggestions.push({
+      emotion: "Emotional Numbness",
+      confidence: 0.5,
+      description: "Numbness in body areas can indicate emotional shutdown, overwhelm, or disconnection.",
+      patterns: [`Numb areas: ${sensationRegions.numb.join(', ')}`]
+    });
+  }
+
+  // General cold suggests withdrawal or sadness
+  if (sensationCounts.cold > sensationCounts.hot + sensationCounts.warm) {
+    suggestions.push({
+      emotion: "Sadness/Withdrawal",
+      confidence: 0.4,
+      description: "Predominant cold sensations often indicate sadness, withdrawal, or low energy states.",
+      patterns: [`Cold dominance in: ${sensationRegions.cold.join(', ')}`]
+    });
+  }
+
+  // General warmth suggests positive states
+  if (sensationCounts.warm > sensationCounts.cold + sensationCounts.cool) {
+    suggestions.push({
+      emotion: "Contentment/Warmth",
+      confidence: 0.4,
+      description: "Predominant warm sensations often indicate contentment, love, or positive emotional states.",
+      patterns: [`Warmth in: ${sensationRegions.warm.join(', ')}`]
+    });
+  }
+
+  return suggestions;
 }

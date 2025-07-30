@@ -36,11 +36,11 @@ All colors MUST be HSL.
     --input: 240 3.7% 15.9%;
     --ring: 260 75% 65%;
 
-    /* Body sensation colors */
-    --sensation-hot: 0 100% 50%;
-    --sensation-warm: 30 100% 60%;
-    --sensation-cool: 200 100% 70%;
-    --sensation-cold: 220 100% 40%;
+    /* Body sensation colors - HSL format */
+    --sensation-hot: 0 85% 60%;
+    --sensation-warm: 25 95% 65%;
+    --sensation-cool: 200 85% 70%;
+    --sensation-cold: 220 90% 45%;
     --sensation-numb: 0 0% 50%;
 
     /* Gradients */

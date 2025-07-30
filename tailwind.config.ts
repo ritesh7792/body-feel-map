@@ -52,6 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				sensation: {
+					hot: 'hsl(var(--sensation-hot))',
+					warm: 'hsl(var(--sensation-warm))',
+					cool: 'hsl(var(--sensation-cool))',
+					cold: 'hsl(var(--sensation-cold))',
+					numb: 'hsl(var(--sensation-numb))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

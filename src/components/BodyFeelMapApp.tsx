@@ -2,8 +2,8 @@ import { useState } from "react";
 import { IntroScreen } from "./IntroScreen";
 import { BodyMappingStep } from "./BodyMappingStep";
 import { ResultsScreen } from "./ResultsScreen";
-import { type BodyMarkings, type BodyRegion, type Sensation } from "@/types/bodyMap";
-import { analyzeEmotions } from "@/utils/emotionAnalysis";
+import { type BodyMarkings, type BodyRegion, type Sensation, type EmotionResult } from "@/types/bodyMap";
+import { apiService } from "@/services/api";
 
 type AppStep = 'intro' | 'front' | 'back' | 'results';
 
@@ -65,13 +65,25 @@ export const BodyFeelMapApp = () => {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 'intro') {
       setCurrentStep('front');
     } else if (currentStep === 'front') {
       setCurrentStep('back');
     } else if (currentStep === 'back') {
       setCurrentStep('results');
+      // Analyze emotions when moving to results
+      setIsAnalyzing(true);
+      try {
+        const emotionResults = await apiService.analyzeEmotions(markings);
+        setEmotions(emotionResults);
+      } catch (error) {
+        console.error('Failed to analyze emotions:', error);
+        // Fallback to empty emotions
+        setEmotions([]);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -91,7 +103,8 @@ export const BodyFeelMapApp = () => {
   // Check if user has marked at least one sensation (optional requirement)
   const canProceed = true; // Allow progression without requiring markings
 
-  const emotions = currentStep === 'results' ? analyzeEmotions(markings) : [];
+  const [emotions, setEmotions] = useState<EmotionResult[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   switch (currentStep) {
     case 'intro':
@@ -116,6 +129,7 @@ export const BodyFeelMapApp = () => {
           markings={markings}
           emotions={emotions}
           onRestart={handleRestart}
+          isLoading={isAnalyzing}
         />
       );
     

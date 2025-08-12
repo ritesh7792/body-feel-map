@@ -10,9 +10,10 @@ interface ResultsScreenProps {
   markings: BodyMarkings;
   emotions: EmotionResult[];
   onRestart: () => void;
+  isLoading?: boolean;
 }
 
-export const ResultsScreen = ({ markings, emotions, onRestart }: ResultsScreenProps) => {
+export const ResultsScreen = ({ markings, emotions, onRestart, isLoading = false }: ResultsScreenProps) => {
   const handleShare = () => {
     const emotionNames = emotions.map(e => e.emotion).join(', ');
     const text = `I just mapped my body sensations and discovered I might be feeling: ${emotionNames}. Try the Body Feeling Map yourself!`;
@@ -75,7 +76,12 @@ export const ResultsScreen = ({ markings, emotions, onRestart }: ResultsScreenPr
                   Detected Emotions
                 </h3>
                 
-                {emotions.length > 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Analyzing your body sensations...</p>
+                  </div>
+                ) : emotions.length > 0 ? (
                   <div className="space-y-4">
                     {emotions.map((emotion, index) => (
                       <Card key={emotion.emotion} className="p-4 bg-accent/20">

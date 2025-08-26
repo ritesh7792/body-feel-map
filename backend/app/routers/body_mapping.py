@@ -1,203 +1,181 @@
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List
-from sqlalchemy.orm import Session
+#!/usr/bin/env python3
+"""
+Body Mapping Router - Simplified for in-memory storage
+"""
 
-from app.schemas.body_mapping import (
-    BodyMappingCreate, 
-    BodyMappingResponse, 
-    BodyMappingUpdate,
-    SensationCreate,
-    SensationResponse
-)
-from app.services.emotion_analysis import EmotionAnalysisService
-from app.core.database import get_db
-from app.models.body_mapping import BodyMapping, Sensation
+from fastapi import APIRouter, HTTPException
+from typing import Dict, List, Any
+from pydantic import BaseModel
+from ..services.memory_storage import memory_storage
 
-router = APIRouter()
+# Request/Response models
+class BodyMappingRequest(BaseModel):
+    session_id: str
+    body_markings: Dict[str, str]
+    view: str = "front"
 
-@router.post("/body-mappings/", response_model=BodyMappingResponse)
-async def create_body_mapping(
-    body_mapping: BodyMappingCreate,
-    db: Session = Depends(get_db)
-):
+class BodyMappingResponse(BaseModel):
+    success: bool
+    data: Dict[str, Any]
+    message: str
+
+router = APIRouter(prefix="/body-mappings", tags=["body-mapping"])
+
+@router.post("/", response_model=BodyMappingResponse)
+async def create_body_mapping(request: BodyMappingRequest) -> BodyMappingResponse:
     """Create a new body mapping session"""
     try:
-        # Create the body mapping record
-        db_body_mapping = BodyMapping(
-            session_id=body_mapping.session_id,
-            user_id=None  # TODO: Add user authentication
+        # Validate view
+        if request.view not in ["front", "back"]:
+            raise HTTPException(status_code=400, detail="View must be 'front' or 'back'")
+        
+        # Create session if it doesn't exist
+        if request.session_id not in memory_storage.sessions:
+            memory_storage.create_session(request.session_id)
+        
+        # Save body mapping
+        mapping_id = memory_storage.save_body_mapping(
+            request.session_id, 
+            request.body_markings, 
+            request.view
         )
-        db.add(db_body_mapping)
-        db.flush()  # Get the ID without committing
-        
-        # Create sensation records
-        for sensation_data in body_mapping.sensations:
-            db_sensation = Sensation(
-                body_mapping_id=db_body_mapping.id,
-                body_region=sensation_data.body_region,
-                sensation_type=sensation_data.sensation_type,
-                view=sensation_data.view
-            )
-            db.add(db_sensation)
-        
-        db.commit()
-        db.refresh(db_body_mapping)
         
         return BodyMappingResponse(
-            id=db_body_mapping.id,
-            session_id=db_body_mapping.session_id,
-            created_at=db_body_mapping.created_at,
-            sensations=[
-                SensationResponse(
-                    id=s.id,
-                    body_region=s.body_region,
-                    sensation_type=s.sensation_type,
-                    view=s.view,
-                    created_at=s.created_at
-                ) for s in db_body_mapping.sensations
-            ]
+            success=True,
+            data={
+                "mapping_id": mapping_id,
+                "session_id": request.session_id,
+                "body_markings": request.body_markings,
+                "view": request.view
+            },
+            message="Body mapping created successfully"
         )
+        
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to create body mapping: {str(e)}")
 
-@router.get("/body-mappings/{mapping_id}", response_model=BodyMappingResponse)
-async def get_body_mapping(mapping_id: int, db: Session = Depends(get_db)):
+@router.get("/{mapping_id}")
+async def get_body_mapping(mapping_id: str) -> Dict[str, Any]:
     """Get a specific body mapping by ID"""
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.id == mapping_id).first()
-    if not db_mapping:
+    mapping = memory_storage.get_body_mapping(mapping_id)
+    if not mapping:
         raise HTTPException(status_code=404, detail="Body mapping not found")
     
-    return BodyMappingResponse(
-        id=db_mapping.id,
-        session_id=db_mapping.session_id,
-        created_at=db_mapping.created_at,
-        sensations=[
-            SensationResponse(
-                id=s.id,
-                body_region=s.body_region,
-                sensation_type=s.sensation_type,
-                view=s.view,
-                created_at=s.created_at
-            ) for s in db_mapping.sensations
-        ]
-    )
+    return {
+        "success": True,
+        "data": mapping,
+        "message": "Body mapping retrieved successfully"
+    }
 
-@router.get("/body-mappings/session/{session_id}", response_model=BodyMappingResponse)
-async def get_body_mapping_by_session(session_id: str, db: Session = Depends(get_db)):
-    """Get a body mapping by session ID"""
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.session_id == session_id).first()
-    if not db_mapping:
-        raise HTTPException(status_code=404, detail="Body mapping not found")
+@router.get("/session/{session_id}")
+async def get_body_mappings_by_session(session_id: str) -> Dict[str, Any]:
+    """Get all body mappings for a session"""
+    mappings = memory_storage.get_session_mappings(session_id)
     
-    return BodyMappingResponse(
-        id=db_mapping.id,
-        session_id=db_mapping.session_id,
-        created_at=db_mapping.created_at,
-        sensations=[
-            SensationResponse(
-                id=s.id,
-                body_region=s.body_region,
-                sensation_type=s.sensation_type,
-                view=s.view,
-                created_at=s.created_at
-            ) for s in db_mapping.sensations
-        ]
-    )
+    return {
+        "success": True,
+        "data": {
+            "session_id": session_id,
+            "mappings": mappings
+        },
+        "message": "Session mappings retrieved successfully"
+    }
 
-@router.put("/body-mappings/{mapping_id}", response_model=BodyMappingResponse)
+@router.put("/{mapping_id}")
 async def update_body_mapping(
-    mapping_id: int,
-    body_mapping_update: BodyMappingUpdate,
-    db: Session = Depends(get_db)
-):
+    mapping_id: str,
+    request: BodyMappingRequest
+) -> Dict[str, Any]:
     """Update an existing body mapping"""
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.id == mapping_id).first()
-    if not db_mapping:
+    existing_mapping = memory_storage.get_body_mapping(mapping_id)
+    if not existing_mapping:
         raise HTTPException(status_code=404, detail="Body mapping not found")
     
     try:
-        # Delete existing sensations
-        db.query(Sensation).filter(Sensation.body_mapping_id == mapping_id).delete()
+        # Update the mapping
+        existing_mapping['body_markings'] = request.body_markings
+        existing_mapping['view'] = request.view
         
-        # Create new sensations
-        for sensation_data in body_mapping_update.sensations:
-            db_sensation = Sensation(
-                body_mapping_id=mapping_id,
-                body_region=sensation_data.body_region,
-                sensation_type=sensation_data.sensation_type,
-                view=sensation_data.view
-            )
-            db.add(db_sensation)
+        return {
+            "success": True,
+            "data": existing_mapping,
+            "message": "Body mapping updated successfully"
+        }
         
-        db.commit()
-        db.refresh(db_mapping)
-        
-        return BodyMappingResponse(
-            id=db_mapping.id,
-            session_id=db_mapping.session_id,
-            created_at=db_mapping.created_at,
-            sensations=[
-                SensationResponse(
-                    id=s.id,
-                    body_region=s.body_region,
-                    sensation_type=s.sensation_type,
-                    view=s.view,
-                    created_at=s.created_at
-                ) for s in db_mapping.sensations
-            ]
-        )
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update body mapping: {str(e)}")
 
-@router.delete("/body-mappings/{mapping_id}")
-async def delete_body_mapping(mapping_id: int, db: Session = Depends(get_db)):
+@router.delete("/{mapping_id}")
+async def delete_body_mapping(mapping_id: str) -> Dict[str, Any]:
     """Delete a body mapping"""
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.id == mapping_id).first()
-    if not db_mapping:
+    mapping = memory_storage.get_body_mapping(mapping_id)
+    if not mapping:
         raise HTTPException(status_code=404, detail="Body mapping not found")
     
     try:
-        # Delete associated sensations first
-        db.query(Sensation).filter(Sensation.body_mapping_id == mapping_id).delete()
-        # Delete the body mapping
-        db.delete(db_mapping)
-        db.commit()
-        return {"message": "Body mapping deleted successfully"}
+        # Remove from body mappings
+        if mapping_id in memory_storage.body_mappings:
+            del memory_storage.body_mappings[mapping_id]
+        
+        # Remove from emotion results
+        if mapping_id in memory_storage.emotion_results:
+            del memory_storage.emotion_results[mapping_id]
+        
+        return {
+            "success": True,
+            "message": "Body mapping deleted successfully"
+        }
+        
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete body mapping: {str(e)}")
 
-@router.post("/body-mappings/{mapping_id}/sensations/", response_model=SensationResponse)
-async def add_sensation(
-    mapping_id: int,
-    sensation: SensationCreate,
-    db: Session = Depends(get_db)
-):
-    """Add a single sensation to an existing body mapping"""
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.id == mapping_id).first()
-    if not db_mapping:
-        raise HTTPException(status_code=404, detail="Body mapping not found")
+@router.get("/")
+async def list_body_mappings() -> Dict[str, Any]:
+    """List all body mappings"""
+    mappings = list(memory_storage.body_mappings.values())
     
-    try:
-        db_sensation = Sensation(
-            body_mapping_id=mapping_id,
-            body_region=sensation.body_region,
-            sensation_type=sensation.sensation_type,
-            view=sensation.view
-        )
-        db.add(db_sensation)
-        db.commit()
-        db.refresh(db_sensation)
-        
-        return SensationResponse(
-            id=db_sensation.id,
-            body_region=db_sensation.body_region,
-            sensation_type=db_sensation.sensation_type,
-            view=db_sensation.view,
-            created_at=db_sensation.created_at
-        )
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to add sensation: {str(e)}")
+    return {
+        "success": True,
+        "data": {
+            "total": len(mappings),
+            "mappings": mappings
+        },
+        "message": "Body mappings retrieved successfully"
+    }
+
+@router.get("/sessions/list")
+async def list_sessions() -> Dict[str, Any]:
+    """List all sessions"""
+    sessions = memory_storage.list_sessions()
+    
+    return {
+        "success": True,
+        "data": {
+            "total": len(sessions),
+            "sessions": sessions
+        },
+        "message": "Sessions retrieved successfully"
+    }
+
+@router.delete("/sessions/{session_id}")
+async def delete_session(session_id: str) -> Dict[str, Any]:
+    """Delete a session and all its mappings"""
+    success = memory_storage.delete_session(session_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    return {
+        "success": True,
+        "message": "Session deleted successfully"
+    }
+
+@router.get("/stats/overview")
+async def get_storage_stats() -> Dict[str, Any]:
+    """Get storage statistics"""
+    stats = memory_storage.get_stats()
+    
+    return {
+        "success": True,
+        "data": stats,
+        "message": "Storage statistics retrieved successfully"
+    }

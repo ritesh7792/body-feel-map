@@ -1,16 +1,19 @@
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
-from app.core.database import get_db
+#!/usr/bin/env python3
+"""
+Users Router - Simplified for in-memory storage
+"""
 
-router = APIRouter()
+from fastapi import APIRouter
 
-@router.get("/users/me")
+router = APIRouter(prefix="/users", tags=["users"])
+
+@router.get("/me")
 async def get_current_user():
     """Get current user information (placeholder for future authentication)"""
     # TODO: Implement user authentication
     return {"message": "User authentication not yet implemented"}
 
-@router.get("/users/profile")
+@router.get("/profile")
 async def get_user_profile():
     """Get user profile information (placeholder for future implementation)"""
     # TODO: Implement user profile

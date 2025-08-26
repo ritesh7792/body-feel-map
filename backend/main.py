@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 from app.routers import body_mapping, emotions, users
@@ -22,9 +21,9 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(body_mapping.router, prefix="/api/v1", tags=["body-mapping"])
-app.include_router(emotions.router, prefix="/api/v1", tags=["emotions"])
-app.include_router(users.router, prefix="/api/v1", tags=["users"])
+app.include_router(body_mapping.router, prefix="/api/v1")
+app.include_router(emotions.router, prefix="/api/v1")
+app.include_router(users.router, prefix="/api/v1")
 
 @app.get("/")
 async def root():

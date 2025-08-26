@@ -1,125 +1,85 @@
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List
-from sqlalchemy.orm import Session
+#!/usr/bin/env python3
+"""
+Emotions router for emotion analysis endpoints
+"""
 
-from app.schemas.body_mapping import EmotionResult, BodyMarkings
-from app.services.emotion_analysis import EmotionAnalysisService
-from app.core.database import get_db
-from app.models.body_mapping import BodyMapping, Sensation
+from fastapi import APIRouter, HTTPException
+from typing import Dict, Any
+from pydantic import BaseModel
+from ..services.emotion_analysis import EmotionAnalysisService
 
-router = APIRouter()
+# Request/Response models
+class EmotionAnalysisRequest(BaseModel):
+    body_markings: Dict[str, str]
+    view: str = "front"
 
-@router.post("/emotions/analyze", response_model=List[EmotionResult])
-async def analyze_emotions_from_markings(markings: BodyMarkings):
-    """Analyze emotions from body markings without saving to database"""
+class EmotionAnalysisResponse(BaseModel):
+    success: bool
+    data: Dict[str, Any]
+    message: str
+
+router = APIRouter(prefix="/emotions", tags=["emotions"])
+
+# Initialize the emotion analysis service
+emotion_service = EmotionAnalysisService()
+
+@router.post("/analyze", response_model=EmotionAnalysisResponse)
+async def analyze_emotions(request: EmotionAnalysisRequest) -> EmotionAnalysisResponse:
+    """Analyze emotions from body sensations"""
     try:
-        emotions = EmotionAnalysisService.analyze_emotions(markings)
-        return emotions
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze emotions: {str(e)}")
-
-@router.get("/emotions/body-mapping/{mapping_id}", response_model=List[EmotionResult])
-async def analyze_emotions_from_mapping(mapping_id: int, db: Session = Depends(get_db)):
-    """Analyze emotions from a saved body mapping"""
-    # Get the body mapping
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.id == mapping_id).first()
-    if not db_mapping:
-        raise HTTPException(status_code=404, detail="Body mapping not found")
-    
-    try:
-        # Convert database sensations to BodyMarkings format
-        front_markings = {}
-        back_markings = {}
+        # Validate input
+        if not request.body_markings:
+            raise HTTPException(status_code=400, detail="Body markings are required")
         
-        for sensation in db_mapping.sensations:
-            if sensation.view == "front":
-                front_markings[sensation.body_region] = sensation.sensation_type
-            elif sensation.view == "back":
-                back_markings[sensation.body_region] = sensation.sensation_type
+        if request.view not in ["front", "back"]:
+            raise HTTPException(status_code=400, detail="View must be 'front' or 'back'")
         
-        # Create BodyMarkings object
-        markings = BodyMarkings(front=front_markings, back=back_markings)
+        # Analyze emotions using the service
+        result = emotion_service.analyze_emotions(request.body_markings, request.view)
         
-        # Analyze emotions
-        emotions = EmotionAnalysisService.analyze_emotions(markings)
-        return emotions
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze emotions: {str(e)}")
-
-@router.get("/emotions/session/{session_id}", response_model=List[EmotionResult])
-async def analyze_emotions_from_session(session_id: str, db: Session = Depends(get_db)):
-    """Analyze emotions from a body mapping session"""
-    # Get the body mapping by session ID
-    db_mapping = db.query(BodyMapping).filter(BodyMapping.session_id == session_id).first()
-    if not db_mapping:
-        raise HTTPException(status_code=404, detail="Body mapping session not found")
-    
-    try:
-        # Convert database sensations to BodyMarkings format
-        front_markings = {}
-        back_markings = {}
-        
-        for sensation in db_mapping.sensations:
-            if sensation.view == "front":
-                front_markings[sensation.body_region] = sensation.sensation_type
-            elif sensation.view == "back":
-                back_markings[sensation.body_region] = sensation.sensation_type
-        
-        # Create BodyMarkings object
-        markings = BodyMarkings(front=front_markings, back=back_markings)
-        
-        # Analyze emotions
-        emotions = EmotionAnalysisService.analyze_emotions(markings)
-        return emotions
+        return EmotionAnalysisResponse(
+            success=True,
+            data=result,
+            message="Emotion analysis completed successfully"
+        )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze emotions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Emotion analysis failed: {str(e)}")
 
-@router.get("/emotions/patterns")
-async def get_emotion_patterns():
-    """Get information about emotion patterns and body sensations"""
+@router.get("/status")
+async def get_service_status() -> Dict[str, Any]:
+    """Get the status of the emotion analysis service"""
     try:
-        patterns = EmotionAnalysisService.EMOTION_PATTERNS
+        status = emotion_service.get_service_status()
         return {
-            "message": "Emotion patterns retrieved successfully",
-            "patterns": patterns
+            "success": True,
+            "data": status,
+            "message": "Service status retrieved successfully"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve emotion patterns: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get service status: {str(e)}")
 
-@router.get("/emotions/sensations")
-async def get_sensation_types():
-    """Get information about different sensation types"""
-    sensation_types = {
-        "hot": {
-            "description": "Strong, intense activation",
-            "color": "sensation-hot",
-            "emotional_associations": ["anger", "fear", "surprise", "pride"]
-        },
-        "warm": {
-            "description": "Mild activation or positive energy",
-            "color": "sensation-warm", 
-            "emotional_associations": ["happiness", "love", "contentment", "pride"]
-        },
-        "cool": {
-            "description": "Slight decrease in energy or detachment",
-            "color": "sensation-cool",
-            "emotional_associations": ["sadness", "fear", "disgust"]
-        },
-        "cold": {
-            "description": "Marked withdrawal or strong negative emotion",
-            "color": "sensation-cold",
-            "emotional_associations": ["sadness", "fear", "shame", "withdrawal"]
-        },
-        "numb": {
-            "description": "No sensation, feeling disconnected",
-            "color": "sensation-numb",
-            "emotional_associations": ["sadness", "shame", "emotional_numbness", "overwhelm"]
+@router.post("/test")
+async def test_emotion_analysis() -> Dict[str, Any]:
+    """Test the emotion analysis service with sample data"""
+    try:
+        # Test with sample data
+        test_markings = {
+            'head': 'hot',
+            'chest': 'warm',
+            'left-arm': 'hot'
         }
-    }
-    
-    return {
-        "message": "Sensation types retrieved successfully",
-        "sensation_types": sensation_types
-    }
+        
+        result = emotion_service.analyze_emotions(test_markings, 'front')
+        
+        return {
+            "success": True,
+            "data": {
+                "test_markings": test_markings,
+                "result": result
+            },
+            "message": "Test analysis completed successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Test analysis failed: {str(e)}")

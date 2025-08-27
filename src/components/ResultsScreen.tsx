@@ -10,10 +10,11 @@ interface ResultsScreenProps {
   markings: BodyMarkings;
   emotions: EmotionResult[];
   onRestart: () => void;
+  onBackToMapping: () => void;
   isLoading?: boolean;
 }
 
-export const ResultsScreen = ({ markings, emotions, onRestart, isLoading = false }: ResultsScreenProps) => {
+export const ResultsScreen = ({ markings, emotions, onRestart, onBackToMapping, isLoading = false }: ResultsScreenProps) => {
   const handleShare = () => {
     const emotionNames = emotions.map(e => e.emotion).join(', ');
     const text = `I just mapped my body sensations and discovered I might be feeling: ${emotionNames}. Try the Body Feeling Map yourself!`;
@@ -139,6 +140,15 @@ export const ResultsScreen = ({ markings, emotions, onRestart, isLoading = false
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 mt-8">
+            <Button
+              onClick={onBackToMapping}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Back to Mapping
+            </Button>
+            
             <Button
               onClick={onRestart}
               variant="outline"

@@ -137,6 +137,7 @@ export const BodyFeelMapApp = () => {
           markings={markings}
           emotions={emotions}
           onRestart={handleRestart}
+          onBackToMapping={() => setCurrentStep('mapping')}
           isLoading={isAnalyzing}
         />
       );

@@ -23,6 +23,11 @@ router = APIRouter(prefix="/emotions", tags=["emotions"])
 # Initialize the emotion analysis service
 emotion_service = EmotionAnalysisService()
 
+@router.options("/analyze")
+async def analyze_emotions_options():
+    """Handle OPTIONS request for CORS preflight"""
+    return {"message": "OK"}
+
 @router.post("/analyze", response_model=EmotionAnalysisResponse)
 async def analyze_emotions(request: EmotionAnalysisRequest) -> EmotionAnalysisResponse:
     """Analyze emotions from body sensations"""

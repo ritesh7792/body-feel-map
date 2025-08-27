@@ -8,7 +8,11 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:backend": "cd backend && docker-compose up -d",
+    "stop:backend": "cd backend && docker-compose down",
+    "start:full": "./start-dev.sh",
+    "start:full:win": "start-dev.bat"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

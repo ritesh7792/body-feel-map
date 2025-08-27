@@ -30,11 +30,14 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
     setSelectedRegion(null);
   };
 
-  const getRegionColor = (region: BodyRegion): string => {
+  const getRegionColor = (region: BodyRegion): { className: string; style?: React.CSSProperties } => {
     const sensation = markings[view][region];
-    if (!sensation) return 'fill-muted hover:fill-accent';
+    if (!sensation) return { className: 'fill-muted hover:fill-accent' };
     const info = SENSATION_INFO[sensation];
-    return `fill-${info.color} opacity-80`;
+    return { 
+      className: 'opacity-80',
+      style: { fill: `hsl(var(--${info.color}))` }
+    };
   };
 
   return (
@@ -53,7 +56,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="60"
               rx="35"
               ry="45"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('head'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('head').className)}
+              style={getRegionColor('head').style}
               onClick={(e) => handleRegionClick('head', e)}
             />
             
@@ -63,7 +67,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               y="100"
               width="30"
               height="25"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('neck'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('neck').className)}
+              style={getRegionColor('neck').style}
               onClick={(e) => handleRegionClick('neck', e)}
             />
             
@@ -73,7 +78,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="170"
               rx="45"
               ry="35"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('chest'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('chest').className)}
+              style={getRegionColor('chest').style}
               onClick={(e) => handleRegionClick('chest', e)}
             />
             
@@ -83,7 +89,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="230"
               rx="40"
               ry="30"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('abdomen'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('abdomen').className)}
+              style={getRegionColor('abdomen').style}
               onClick={(e) => handleRegionClick('abdomen', e)}
             />
             
@@ -93,7 +100,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="155"
               rx="15"
               ry="40"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-arm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-arm').className)}
+              style={getRegionColor('left-arm').style}
               onClick={(e) => handleRegionClick('left-arm', e)}
             />
             
@@ -103,7 +111,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="155"
               rx="15"
               ry="40"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-arm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-arm').className)}
+              style={getRegionColor('right-arm').style}
               onClick={(e) => handleRegionClick('right-arm', e)}
             />
             
@@ -113,7 +122,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="210"
               rx="12"
               ry="35"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-forearm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-forearm').className)}
+              style={getRegionColor('left-forearm').style}
               onClick={(e) => handleRegionClick('left-forearm', e)}
             />
             
@@ -123,7 +133,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="210"
               rx="12"
               ry="35"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-forearm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-forearm').className)}
+              style={getRegionColor('right-forearm').style}
               onClick={(e) => handleRegionClick('right-forearm', e)}
             />
             
@@ -133,7 +144,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="255"
               rx="10"
               ry="15"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-hand'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-hand').className)}
+              style={getRegionColor('left-hand').style}
               onClick={(e) => handleRegionClick('left-hand', e)}
             />
             
@@ -143,7 +155,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="255"
               rx="10"
               ry="15"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-hand'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-hand').className)}
+              style={getRegionColor('right-hand').style}
               onClick={(e) => handleRegionClick('right-hand', e)}
             />
             
@@ -153,7 +166,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="320"
               rx="20"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-thigh'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-thigh').className)}
+              style={getRegionColor('left-thigh').style}
               onClick={(e) => handleRegionClick('left-thigh', e)}
             />
             
@@ -163,7 +177,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="320"
               rx="20"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-thigh'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-thigh').className)}
+              style={getRegionColor('right-thigh').style}
               onClick={(e) => handleRegionClick('right-thigh', e)}
             />
             
@@ -173,7 +188,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="430"
               rx="15"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-leg'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-leg').className)}
+              style={getRegionColor('left-leg').style}
               onClick={(e) => handleRegionClick('left-leg', e)}
             />
             
@@ -183,7 +199,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="430"
               rx="15"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-leg'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-leg').className)}
+              style={getRegionColor('right-leg').style}
               onClick={(e) => handleRegionClick('right-leg', e)}
             />
             
@@ -193,7 +210,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="510"
               rx="12"
               ry="20"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-foot'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-foot').className)}
+              style={getRegionColor('left-foot').style}
               onClick={(e) => handleRegionClick('left-foot', e)}
             />
             
@@ -203,7 +221,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="510"
               rx="12"
               ry="20"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-foot'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-foot').className)}
+              style={getRegionColor('right-foot').style}
               onClick={(e) => handleRegionClick('right-foot', e)}
             />
           </g>
@@ -216,7 +235,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="60"
               rx="35"
               ry="45"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('head'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('head').className)}
+              style={getRegionColor('head').style}
               onClick={(e) => handleRegionClick('head', e)}
             />
             
@@ -226,7 +246,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               y="100"
               width="30"
               height="25"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('neck'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('neck').className)}
+              style={getRegionColor('neck').style}
               onClick={(e) => handleRegionClick('neck', e)}
             />
             
@@ -236,7 +257,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="170"
               rx="45"
               ry="35"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('upper-back'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('upper-back').className)}
+              style={getRegionColor('upper-back').style}
               onClick={(e) => handleRegionClick('upper-back', e)}
             />
             
@@ -246,7 +268,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="230"
               rx="40"
               ry="30"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('lower-back'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('lower-back').className)}
+              style={getRegionColor('lower-back').style}
               onClick={(e) => handleRegionClick('lower-back', e)}
             />
             
@@ -256,7 +279,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="155"
               rx="15"
               ry="40"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-arm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-arm').className)}
+              style={getRegionColor('left-arm').style}
               onClick={(e) => handleRegionClick('left-arm', e)}
             />
             
@@ -265,7 +289,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="155"
               rx="15"
               ry="40"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-arm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-arm').className)}
+              style={getRegionColor('right-arm').style}
               onClick={(e) => handleRegionClick('right-arm', e)}
             />
             
@@ -274,7 +299,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="210"
               rx="12"
               ry="35"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-forearm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-forearm').className)}
+              style={getRegionColor('left-forearm').style}
               onClick={(e) => handleRegionClick('left-forearm', e)}
             />
             
@@ -283,7 +309,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="210"
               rx="12"
               ry="35"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-forearm'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-forearm').className)}
+              style={getRegionColor('right-forearm').style}
               onClick={(e) => handleRegionClick('right-forearm', e)}
             />
             
@@ -292,7 +319,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="255"
               rx="10"
               ry="15"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-hand'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-hand').className)}
+              style={getRegionColor('left-hand').style}
               onClick={(e) => handleRegionClick('left-hand', e)}
             />
             
@@ -301,16 +329,18 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="255"
               rx="10"
               ry="15"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-hand'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-hand').className)}
+              style={getRegionColor('right-hand').style}
               onClick={(e) => handleRegionClick('right-hand', e)}
-            />
+              />
             
             <ellipse
               cx="125"
               cy="320"
               rx="20"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-thigh'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-thigh').className)}
+              style={getRegionColor('left-thigh').style}
               onClick={(e) => handleRegionClick('left-thigh', e)}
             />
             
@@ -319,7 +349,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="320"
               rx="20"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-thigh'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-thigh').className)}
+              style={getRegionColor('right-thigh').style}
               onClick={(e) => handleRegionClick('right-thigh', e)}
             />
             
@@ -328,7 +359,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="430"
               rx="15"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-leg'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-leg').className)}
+              style={getRegionColor('left-leg').style}
               onClick={(e) => handleRegionClick('left-leg', e)}
             />
             
@@ -337,7 +369,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="430"
               rx="15"
               ry="50"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-leg'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-leg').className)}
+              style={getRegionColor('right-leg').style}
               onClick={(e) => handleRegionClick('right-leg', e)}
             />
             
@@ -346,7 +379,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="510"
               rx="12"
               ry="20"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-foot'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('left-foot').className)}
+              style={getRegionColor('left-foot').style}
               onClick={(e) => handleRegionClick('left-foot', e)}
             />
             
@@ -355,7 +389,8 @@ export const BodyMap = ({ view, markings, onMarkingChange }: BodyMapProps) => {
               cy="510"
               rx="12"
               ry="20"
-              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-foot'))}
+              className={cn("cursor-pointer transition-all stroke-border stroke-2", getRegionColor('right-foot').className)}
+              style={getRegionColor('right-foot').style}
               onClick={(e) => handleRegionClick('right-foot', e)}
             />
           </g>

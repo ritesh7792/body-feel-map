@@ -65,7 +65,10 @@ export const BodyMappingStep = ({
                 <div className="space-y-3">
                   {Object.entries(SENSATION_INFO).map(([sensation, info]) => (
                     <div key={sensation} className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full bg-${info.color}`} />
+                      <div 
+                        className="w-5 h-5 rounded-full" 
+                        style={{ backgroundColor: `hsl(var(--${info.color}))` }}
+                      />
                       <div>
                         <span className="font-medium text-foreground">{info.label}</span>
                         <p className="text-sm text-muted-foreground">{info.description}</p>

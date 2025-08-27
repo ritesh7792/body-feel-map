@@ -42,7 +42,10 @@ export const SensationSelector = ({ onSelect, onClose, position }: SensationSele
               onClick={() => onSelect(sensation)}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-4 h-4 rounded-full bg-${info.color}`} />
+                <div 
+                  className="w-4 h-4 rounded-full" 
+                  style={{ backgroundColor: `hsl(var(--${info.color}))` }}
+                />
                 <div className="text-left">
                   <div className="font-medium text-sm">{info.label}</div>
                   <div className="text-xs text-muted-foreground">{info.description}</div>

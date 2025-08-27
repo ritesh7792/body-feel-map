@@ -14,11 +14,10 @@ app = FastAPI(
 # CORS middleware for frontend communication - add FIRST
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_origins=["*"],  # Temporarily allow all origins for debugging
+    allow_credentials=False,  # Disable credentials when allowing all origins
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
 )
 
 # Include routers

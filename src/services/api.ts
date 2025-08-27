@@ -80,11 +80,33 @@ class ApiService {
   }
 
   // Emotion Analysis endpoints
-  async analyzeEmotions(markings: BodyMarkings): Promise<EmotionResult[]> {
-    return this.request('/emotions/analyze', {
+  async analyzeEmotions(markings: BodyMarkings, view: 'front' | 'back' = 'front'): Promise<EmotionResult[]> {
+    // Extract only the body markings for the specified view
+    const bodyMarkings = markings[view];
+    
+    // Filter out null values (unmarked regions)
+    const filteredMarkings = Object.fromEntries(
+      Object.entries(bodyMarkings).filter(([_, sensation]) => sensation !== null)
+    );
+    
+    const response = await this.request('/emotions/analyze', {
       method: 'POST',
-      body: JSON.stringify(markings),
+      body: JSON.stringify({
+        body_markings: filteredMarkings,
+        view: view
+      }),
     });
+    
+    // Transform the response to match the expected EmotionResult[] format
+    if (response.success && response.data) {
+      return [{
+        emotion: response.data.emotion,
+        description: response.data.description,
+        patterns: response.data.patterns || []
+      }];
+    }
+    
+    return [];
   }
 
   async analyzeEmotionsFromMapping(mappingId: number): Promise<EmotionResult[]> {

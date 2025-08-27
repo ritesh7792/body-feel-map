@@ -75,8 +75,23 @@ export const BodyFeelMapApp = () => {
       // Analyze emotions when moving to results
       setIsAnalyzing(true);
       try {
-        const emotionResults = await apiService.analyzeEmotions(markings);
-        setEmotions(emotionResults);
+        // Analyze both front and back views if they have markings
+        const frontMarkings = Object.values(markings.front).some(v => v !== null);
+        const backMarkings = Object.values(markings.back).some(v => v !== null);
+        
+        let allEmotions: EmotionResult[] = [];
+        
+        if (frontMarkings) {
+          const frontEmotions = await apiService.analyzeEmotions(markings, 'front');
+          allEmotions.push(...frontEmotions);
+        }
+        
+        if (backMarkings) {
+          const backEmotions = await apiService.analyzeEmotions(markings, 'back');
+          allEmotions.push(...backEmotions);
+        }
+        
+        setEmotions(allEmotions);
       } catch (error) {
         console.error('Failed to analyze emotions:', error);
         // Fallback to empty emotions

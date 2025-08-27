@@ -1,62 +1,65 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { BodyMap } from "./BodyMap";
 import { type BodyMarkings, type BodyRegion, type Sensation, SENSATION_INFO } from "@/types/bodyMap";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, Brain, RefreshCw } from "lucide-react";
 
 interface BodyMappingStepProps {
-  view: 'front' | 'back';
   markings: BodyMarkings;
-  onMarkingChange: (region: BodyRegion, sensation: Sensation) => void;
-  onNext: () => void;
+  onMarkingChange: (region: BodyRegion, sensation: Sensation, view: 'front' | 'back') => void;
+  onAnalyze: () => void;
   onBack: () => void;
-  canGoNext: boolean;
+  isAnalyzing: boolean;
 }
 
 export const BodyMappingStep = ({ 
-  view, 
   markings, 
   onMarkingChange, 
-  onNext, 
+  onAnalyze, 
   onBack, 
-  canGoNext 
+  isAnalyzing 
 }: BodyMappingStepProps) => {
-  const currentStep = view === 'front' ? 1 : 2;
-  const progress = (currentStep / 2) * 100;
-
   return (
     <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Progress value={progress} className="w-full" />
-          <p className="text-sm text-muted-foreground mt-2 text-center">
-            Step {currentStep} of 2
-          </p>
-        </div>
-
+      <div className="max-w-6xl mx-auto">
         <Card className="p-6 bg-card border border-border shadow-[var(--shadow-elegant)]">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              {view === 'front' ? 'Front Body Mapping' : 'Back Body Mapping'}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
+              Body Sensation Mapping
             </h2>
             <p className="text-muted-foreground">
-              {view === 'front' 
-                ? "Tap or click on areas of the body's front and choose how they feel:"
-                : "Mark areas on the back using the same sensations:"
-              }
+              Mark areas on your body and choose how they feel. You can analyze emotions anytime!
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 items-start">
-            <div className="flex justify-center">
-              <BodyMap 
-                view={view}
-                markings={markings}
-                onMarkingChange={onMarkingChange}
-              />
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Body Maps */}
+            <div className="lg:col-span-2">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
+                    Front View
+                  </h3>
+                  <BodyMap 
+                    view="front"
+                    markings={markings}
+                    onMarkingChange={(region, sensation) => onMarkingChange(region, sensation, 'front')}
+                  />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
+                    Back View
+                  </h3>
+                  <BodyMap 
+                    view="back"
+                    markings={markings}
+                    onMarkingChange={(region, sensation) => onMarkingChange(region, sensation, 'back')}
+                  />
+                </div>
+              </div>
             </div>
 
+            {/* Side Panel */}
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4">
@@ -87,26 +90,42 @@ export const BodyMappingStep = ({
                   <li>• Not every region needs to be marked</li>
                 </ul>
               </div>
+
+              {/* Calculate Button */}
+              <div className="pt-4">
+                <Button
+                  onClick={onAnalyze}
+                  disabled={isAnalyzing}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-12 text-lg"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="w-5 h-5 mr-2" />
+                      Analyze Emotions
+                    </>
+                  )}
+                </Button>
+                
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Click anytime to analyze your current body sensations
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-between mt-8">
+          <div className="flex justify-start mt-8">
             <Button
               variant="outline"
               onClick={onBack}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              {view === 'front' ? 'Back to Intro' : 'Back to Front'}
-            </Button>
-
-            <Button
-              onClick={onNext}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!canGoNext}
-            >
-              {view === 'front' ? 'Continue to Back' : 'View Results'}
-              <ArrowRight className="w-4 h-4" />
+              Back to Intro
             </Button>
           </div>
         </Card>

@@ -5,7 +5,7 @@ import { ResultsScreen } from "./ResultsScreen";
 import { type BodyMarkings, type BodyRegion, type Sensation, type EmotionResult } from "@/types/bodyMap";
 import { apiService } from "@/services/api";
 
-type AppStep = 'intro' | 'front' | 'back' | 'results';
+type AppStep = 'intro' | 'mapping' | 'results';
 
 const createEmptyMarkings = (): BodyMarkings => ({
   front: {
@@ -54,8 +54,7 @@ export const BodyFeelMapApp = () => {
   const [currentStep, setCurrentStep] = useState<AppStep>('intro');
   const [markings, setMarkings] = useState<BodyMarkings>(createEmptyMarkings);
 
-  const handleMarkingChange = (region: BodyRegion, sensation: Sensation) => {
-    const view = currentStep as 'front' | 'back';
+  const handleMarkingChange = (region: BodyRegion, sensation: Sensation, view: 'front' | 'back') => {
     setMarkings(prev => ({
       ...prev,
       [view]: {
@@ -67,46 +66,43 @@ export const BodyFeelMapApp = () => {
 
   const handleNext = async () => {
     if (currentStep === 'intro') {
-      setCurrentStep('front');
-    } else if (currentStep === 'front') {
-      setCurrentStep('back');
-    } else if (currentStep === 'back') {
-      setCurrentStep('results');
-      // Analyze emotions when moving to results
-      setIsAnalyzing(true);
-      try {
-        // Analyze both front and back views if they have markings
-        const frontMarkings = Object.values(markings.front).some(v => v !== null);
-        const backMarkings = Object.values(markings.back).some(v => v !== null);
-        
-        let allEmotions: EmotionResult[] = [];
-        
-        if (frontMarkings) {
-          const frontEmotions = await apiService.analyzeEmotions(markings, 'front');
-          allEmotions.push(...frontEmotions);
-        }
-        
-        if (backMarkings) {
-          const backEmotions = await apiService.analyzeEmotions(markings, 'back');
-          allEmotions.push(...backEmotions);
-        }
-        
-        setEmotions(allEmotions);
-      } catch (error) {
-        console.error('Failed to analyze emotions:', error);
-        // Fallback to empty emotions
-        setEmotions([]);
-      } finally {
-        setIsAnalyzing(false);
-      }
+      setCurrentStep('mapping');
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 'front') {
+    if (currentStep === 'mapping') {
       setCurrentStep('intro');
-    } else if (currentStep === 'back') {
-      setCurrentStep('front');
+    }
+  };
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      // Analyze both front and back views if they have markings
+      const frontMarkings = Object.values(markings.front).some(v => v !== null);
+      const backMarkings = Object.values(markings.back).some(v => v !== null);
+      
+      let allEmotions: EmotionResult[] = [];
+      
+      if (frontMarkings) {
+        const frontEmotions = await apiService.analyzeEmotions(markings, 'front');
+        allEmotions.push(...frontEmotions);
+      }
+      
+      if (backMarkings) {
+        const backEmotions = await apiService.analyzeEmotions(markings, 'back');
+        allEmotions.push(...backEmotions);
+      }
+      
+      setEmotions(allEmotions);
+      setCurrentStep('results');
+    } catch (error) {
+      console.error('Failed to analyze emotions:', error);
+      // Fallback to empty emotions
+      setEmotions([]);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -115,8 +111,7 @@ export const BodyFeelMapApp = () => {
     setCurrentStep('intro');
   };
 
-  // Check if user has marked at least one sensation (optional requirement)
-  const canProceed = true; // Allow progression without requiring markings
+
 
   const [emotions, setEmotions] = useState<EmotionResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -125,16 +120,14 @@ export const BodyFeelMapApp = () => {
     case 'intro':
       return <IntroScreen onStart={handleNext} />;
     
-    case 'front':
-    case 'back':
+    case 'mapping':
       return (
         <BodyMappingStep
-          view={currentStep}
           markings={markings}
           onMarkingChange={handleMarkingChange}
-          onNext={handleNext}
+          onAnalyze={handleAnalyze}
           onBack={handleBack}
-          canGoNext={canProceed}
+          isAnalyzing={isAnalyzing}
         />
       );
     
